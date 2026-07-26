@@ -12,9 +12,10 @@ cp terraform.tfvars.example terraform.tfvars
 ```
 
 Set `subscription_id`. To grant GitHub Actions access during the same apply,
-the defaults target `jeremybusk/azuresdx1` and its `azure` GitHub environment.
-Override `github_owner`, `github_repository`, or `github_environment` only if
-those values change.
+the defaults target `jeremybusk/azuresdx1`, its immutable GitHub owner and
+repository IDs, and its `azure` GitHub environment. Override the corresponding
+variables only if the repository changes. The immutable IDs must match the
+subject claim printed by GitHub's OIDC login step.
 
 Your signed-in account must be permitted to create Entra application
 registrations and Azure role assignments. Depending on tenant policy, that

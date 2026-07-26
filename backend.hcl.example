@@ -1,0 +1,5 @@
+resource_group_name  = "terraform-state-rg"
+storage_account_name = "replacewithgloballyuniquename"
+container_name       = "tfstate"
+key                  = "hello-nginx.tfstate"
+use_azuread_auth     = true

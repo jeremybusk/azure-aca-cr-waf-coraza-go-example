@@ -50,10 +50,15 @@ Replace the example UUID with the subscription ID printed by:
 az account show --query id -o tsv | tr -d '\r\n'
 ```
 
+This repository uses Azure Blob Storage for remote state so local and GitHub
+deployments share the same infrastructure record. Complete the
+[Remote state](#remote-state) setup below, copy `backend.hcl.example` to
+`backend.hcl`, and fill in the three Azure resource names.
+
 Initialize and review the deployment:
 
 ```bash
-terraform init
+terraform init -backend-config=backend.hcl
 terraform plan
 ```
 
@@ -119,3 +124,76 @@ terraform destroy
 
 Confirm in the Azure portal that the resource group shown by
 `terraform output resource_group_name` is gone.
+
+## GitHub Actions
+
+The workflow in `.github/workflows/terraform.yml` validates pull requests and
+runs a saved plan followed by apply on pushes to `main` or manual dispatches.
+The deploy job uses the GitHub environment named `azure`; add required
+reviewers to that environment if deployments should require approval.
+
+Authentication uses GitHub OIDC, so **no Azure client secret is needed**.
+Create an Entra application or user-assigned managed identity, grant it
+`Contributor` on the target subscription, and add a federated credential for:
+
+```text
+repo:<github-owner>/<github-repository>:environment:azure
+```
+
+Add these GitHub **Actions repository variables** under **Settings → Secrets
+and variables → Actions → Variables**:
+
+| Variable | Value |
+| --- | --- |
+| `AZURE_CLIENT_ID` | Application/client ID of the federated Azure identity |
+| `AZURE_TENANT_ID` | Microsoft Entra tenant ID |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID |
+| `TF_STATE_RESOURCE_GROUP` | Resource group containing the state account |
+| `TF_STATE_STORAGE_ACCOUNT` | Globally unique Azure Storage account name |
+| `TF_STATE_CONTAINER` | Blob container name, for example `tfstate` |
+
+The three Azure IDs are identifiers, not credentials. They may be stored as
+variables rather than secrets. The federated identity must exactly match the
+repository and `azure` environment configured above.
+
+### Remote state
+
+GitHub runners are temporary, so the workflow stores Terraform state in Azure
+Blob Storage. The [`bootstrap/`](bootstrap/) Terraform stack creates the
+resource group, storage account, private container, data-protection settings,
+delete lock, and state-access roles. Follow
+[`bootstrap/README.md`](bootstrap/README.md) once before the first root
+deployment. The federated identity also needs `Contributor` on the application
+subscription so it can deploy the Container Apps resources.
+
+When switching an existing local deployment to this backend, initialize it
+with the same values and allow Terraform to migrate the local state:
+
+```bash
+terraform init -migrate-state \
+  -backend-config="resource_group_name=<state-resource-group>" \
+  -backend-config="storage_account_name=<state-storage-account>" \
+  -backend-config="container_name=<state-container>" \
+  -backend-config="key=hello-nginx.tfstate" \
+  -backend-config="use_azuread_auth=true"
+```
+
+State storage generally costs very little, but unlike the scale-to-zero
+container app it is not a free, ephemeral resource. Never commit a state or
+saved-plan file because either can contain sensitive values.
+
+### Main branch ruleset
+
+Import `.github/rulesets/main.json` under **Settings → Rules → Rulesets → New
+ruleset → Import a ruleset**. It protects `main` with:
+
+- one approving pull-request review;
+- approval of the most recent push by someone other than its author;
+- dismissal of stale approvals and resolution of review conversations;
+- the up-to-date `Validate` GitHub Actions check;
+- squash or rebase merges only; and
+- deletion and force-push protection.
+
+Repository administrators can explicitly bypass the ruleset. GitHub omits
+bypass actors when exporting rulesets, so confirm after import that
+**Repository role: Admin — Always allow** appears in the bypass list.

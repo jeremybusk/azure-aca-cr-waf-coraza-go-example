@@ -1,0 +1,4 @@
+subscription_id = "34859938-4365-426a-8b52-ca21e2f0fd7a"
+
+# Set this to the object ID (not client ID) of the GitHub OIDC identity.
+# github_identity_object_id = "00000000-0000-0000-0000-000000000000"

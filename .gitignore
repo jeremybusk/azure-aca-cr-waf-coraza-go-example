@@ -3,6 +3,10 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
+terraform.tfvars
+*.auto.tfvars
+backend.hcl
+/bootstrap/backend.tf
 crash.log
 crash.*.log
 .terraformrc
@@ -13,3 +17,6 @@ override.tf.json
 *_override.tf.json
 tmp/
 trash/
+terraform.tfvars
+*.auto.tfvars
+notes/

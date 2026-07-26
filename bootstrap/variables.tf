@@ -38,10 +38,22 @@ variable "github_owner" {
   default     = "jeremybusk"
 }
 
+variable "github_owner_id" {
+  description = "Immutable numeric GitHub ID of the repository owner."
+  type        = string
+  default     = "19394715"
+}
+
 variable "github_repository" {
   description = "GitHub repository trusted by the federated identity."
   type        = string
   default     = "azuresdx1"
+}
+
+variable "github_repository_id" {
+  description = "Immutable numeric GitHub repository ID."
+  type        = string
+  default     = "1312417313"
 }
 
 variable "github_environment" {

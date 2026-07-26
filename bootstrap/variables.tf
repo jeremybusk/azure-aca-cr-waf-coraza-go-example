@@ -32,11 +32,28 @@ variable "container_name" {
   default     = "tfstate"
 }
 
-variable "github_identity_object_id" {
-  description = "Optional Entra service principal or managed identity object ID used by GitHub Actions."
+variable "github_owner" {
+  description = "GitHub user or organization that owns the repository."
   type        = string
-  default     = null
-  nullable    = true
+  default     = "jeremybusk"
+}
+
+variable "github_repository" {
+  description = "GitHub repository trusted by the federated identity."
+  type        = string
+  default     = "azuresdx1"
+}
+
+variable "github_environment" {
+  description = "GitHub environment trusted by the federated identity."
+  type        = string
+  default     = "azure"
+}
+
+variable "github_application_display_name" {
+  description = "Display name of the Entra application used by GitHub Actions."
+  type        = string
+  default     = "gha-azuresdx1-prod"
 }
 
 variable "enable_delete_lock" {

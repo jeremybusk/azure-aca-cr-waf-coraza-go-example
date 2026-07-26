@@ -1,4 +1,26 @@
 data "azurerm_client_config" "current" {}
+data "azuread_client_config" "current" {}
+
+resource "azuread_application" "github" {
+  display_name     = var.github_application_display_name
+  sign_in_audience = "AzureADMyOrg"
+  owners           = [data.azuread_client_config.current.object_id]
+}
+
+resource "azuread_service_principal" "github" {
+  client_id                    = azuread_application.github.client_id
+  app_role_assignment_required = false
+  owners                       = [data.azuread_client_config.current.object_id]
+}
+
+resource "azuread_application_federated_identity_credential" "github" {
+  application_id = azuread_application.github.id
+  display_name   = "github-${var.github_repository}-${var.github_environment}"
+  description    = "GitHub Actions deployment from the ${var.github_environment} environment"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:${var.github_owner}/${var.github_repository}:environment:${var.github_environment}"
+}
 
 resource "azurerm_resource_group" "state" {
   name     = var.resource_group_name
@@ -46,11 +68,19 @@ resource "azurerm_role_assignment" "current_user_state_access" {
 }
 
 resource "azurerm_role_assignment" "github_state_access" {
-  count = var.github_identity_object_id == null ? 0 : 1
+  scope                            = azurerm_storage_account.state.id
+  role_definition_name             = "Storage Blob Data Contributor"
+  principal_id                     = azuread_service_principal.github.object_id
+  principal_type                   = "ServicePrincipal"
+  skip_service_principal_aad_check = true
+}
 
-  scope                = azurerm_storage_account.state.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = var.github_identity_object_id
+resource "azurerm_role_assignment" "github_subscription_contributor" {
+  scope                            = "/subscriptions/${trimspace(var.subscription_id)}"
+  role_definition_name             = "Contributor"
+  principal_id                     = azuread_service_principal.github.object_id
+  principal_type                   = "ServicePrincipal"
+  skip_service_principal_aad_check = true
 }
 
 resource "azurerm_management_lock" "state" {

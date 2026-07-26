@@ -50,7 +50,7 @@ resource "azurerm_container_app" "this" {
       command = ["/bin/sh"]
       args = [
         "-c",
-        "printf '%s\n' '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Hello All from Azure</title></head><body><h1>Hello, World!</h1><p>NGINX is running on Azure Container Apps.</p></body></html>' > /usr/share/nginx/html/index.html && exec nginx -g 'daemon off;'"
+        "printf '%s\n' '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Hello All from Azure</title></head><body><h1>Hello All, World!</h1><p>NGINX is running on Azure Container Apps.</p></body></html>' > /usr/share/nginx/html/index.html && exec nginx -g 'daemon off;'"
       ]
     }
   }

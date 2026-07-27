@@ -50,10 +50,10 @@ resource "azurerm_container_app" "this" {
       command = ["/bin/sh"]
       args = [
         "-c",
-        "mkdir -p /tmp/caddy-site && printf '%s' '${base64encode(templatefile("${path.module}/container/Caddyfile.tftpl", {
+        "mkdir -p /config/caddy /tmp/caddy-site && printf '%s' '${base64encode(templatefile("${path.module}/container/Caddyfile.tftpl", {
           redirect_apex_domain = var.redirect_apex_domain
           primary_www_domain   = var.primary_www_domain
-        }))}' | base64 -d > /tmp/Caddyfile && printf '%s' '${base64encode(file("${path.module}/container/index.html"))}' | base64 -d > /tmp/caddy-site/index.html && exec caddy run --config /tmp/Caddyfile --adapter caddyfile"
+        }))}' | base64 -d > /config/caddy/Caddyfile && printf '%s' '${base64encode(file("${path.module}/container/index.html"))}' | base64 -d > /tmp/caddy-site/index.html && exec /entrypoint.sh caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
       ]
     }
   }

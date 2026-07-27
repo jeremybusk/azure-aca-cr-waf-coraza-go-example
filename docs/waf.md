@@ -20,9 +20,11 @@ policy enables blocking, paranoia level 1, inbound anomaly threshold 5, and
 outbound anomaly threshold 4.
 
 The official container runs without root privileges. Terraform writes the
-rendered Caddy configuration and static page under `/tmp`, which is writable
-by that user; the image's `/etc/caddy` and `/srv` directories remain
-read-only.
+rendered Caddy override to its supported writable location,
+`/config/caddy/Caddyfile`, and writes the static page under
+`/tmp/caddy-site`. The image entrypoint copies and formats the Caddy override,
+generates Coraza's environment-driven configuration, and activates CRS before
+starting Caddy. The image's `/srv` directory remains read-only.
 
 ## Verify normal traffic
 

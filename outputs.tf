@@ -15,6 +15,7 @@ output "resource_group_name" {
 
 output "custom_domain_dns_records" {
   description = "Create these records at the registrar before setting enable_custom_domain to true."
+  sensitive   = true
   value = {
     domain    = var.custom_domain
     a_name    = "@"

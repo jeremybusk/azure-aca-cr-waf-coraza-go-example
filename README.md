@@ -109,12 +109,14 @@ phases so the deployment does not fail before public DNS is ready.
 First leave `enable_custom_domain = false`, apply, and read:
 
 ```bash
-terraform output custom_domain_dns_records
+terraform output -json custom_domain_dns_records
 ```
 
 Create the reported `A` record for `@` and `TXT` record for `asuid` in the
 registrar's DNS control panel. Do not point the domain at a revision-specific
-hostname.
+hostname. Terraform treats the verification token as sensitive, so the normal
+apply summary redacts this output; requesting it explicitly with `-json`
+reveals the values needed for DNS.
 
 After public DNS resolves, set the variable default to `true` or deploy with:
 

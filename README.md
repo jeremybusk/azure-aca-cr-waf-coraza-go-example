@@ -125,9 +125,13 @@ terraform apply -var='enable_custom_domain=true'
 ```
 
 Azure Container Apps then validates `uvoo.xyz`, binds it to the app, and
-issues a free managed TLS certificate. GitHub Actions uses variable defaults,
-so a permanent CI deployment should change the default in `variables.tf` to
-`true` in a second pull request after the DNS records exist.
+adds the custom hostname. Run the one-time managed-certificate binding command
+in the custom-domain runbook to issue and bind HTTPS. GitHub Actions uses
+variable defaults, so a permanent CI deployment should change the default in
+`variables.tf` to `true` in a second pull request after the DNS records exist.
+
+See [docs/custom-domain.md](docs/custom-domain.md) for the complete DNS,
+verification, certificate-binding, and troubleshooting runbook.
 
 ## Cost controls
 

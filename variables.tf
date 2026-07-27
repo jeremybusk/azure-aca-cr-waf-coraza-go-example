@@ -30,6 +30,18 @@ variable "name_prefix" {
   }
 }
 
+variable "custom_domain" {
+  description = "Apex custom domain to bind to the Container App."
+  type        = string
+  default     = "uvoo.xyz"
+}
+
+variable "enable_custom_domain" {
+  description = "Enable only after the required A and TXT records exist in public DNS."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Tags applied to the Azure resources."
   type        = map(string)

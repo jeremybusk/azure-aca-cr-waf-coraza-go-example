@@ -39,7 +39,7 @@ variable "custom_domain" {
 variable "enable_custom_domain" {
   description = "Enable only after the required A and TXT records exist in public DNS."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "tags" {

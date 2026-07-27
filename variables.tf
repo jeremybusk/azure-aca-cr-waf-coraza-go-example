@@ -42,6 +42,24 @@ variable "enable_custom_domain" {
   default     = true
 }
 
+variable "redirect_apex_domain" {
+  description = "Apex domain that redirects permanently to the canonical www hostname."
+  type        = string
+  default     = "uvoo.xyz"
+}
+
+variable "primary_www_domain" {
+  description = "Canonical www hostname that serves the application."
+  type        = string
+  default     = "www.uvoo.xyz"
+}
+
+variable "enable_www_custom_domain" {
+  description = "Enable only after the www.uvoo.xyz CNAME and asuid.www TXT records exist in public DNS."
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Tags applied to the Azure resources."
   type        = map(string)

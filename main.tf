@@ -50,7 +50,7 @@ resource "azurerm_container_app" "this" {
       command = ["/bin/sh"]
       args = [
         "-c",
-        "printf '%s\n' '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Hello All from Azure</title></head><body><h1>Hello All, World!</h1><p>NGINX is running on Azure Container Apps.</p></body></html>' > /usr/share/nginx/html/index.html && exec nginx -g 'daemon off;'"
+        "printf '%s\n' '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Hello All from Azure</title></head><body><h1>Hello All, World!</h1><p>NGINX is running on Azure Container Apps.</p></body></html>' > /usr/share/nginx/html/index.html && printf '%s\n' 'server { listen 80; server_name ${var.redirect_apex_domain}; return 301 https://${var.primary_www_domain}$request_uri; } server { listen 80 default_server; server_name ${var.primary_www_domain} _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ =404; } }' > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
       ]
     }
   }
@@ -64,6 +64,20 @@ resource "azurerm_container_app_custom_domain" "this" {
 
   # Azure populates these asynchronously when issuing its free managed
   # certificate. Ignoring them prevents Terraform from undoing the binding.
+  lifecycle {
+    ignore_changes = [
+      certificate_binding_type,
+      container_app_environment_certificate_id
+    ]
+  }
+}
+
+resource "azurerm_container_app_custom_domain" "www" {
+  count = var.enable_www_custom_domain ? 1 : 0
+
+  name             = var.primary_www_domain
+  container_app_id = azurerm_container_app.this.id
+
   lifecycle {
     ignore_changes = [
       certificate_binding_type,

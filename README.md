@@ -133,6 +133,9 @@ variable defaults, so a permanent CI deployment should change the default in
 See [docs/custom-domain.md](docs/custom-domain.md) for the complete DNS,
 verification, certificate-binding, and troubleshooting runbook.
 
+See [docs/uvoo-xyz-redirect.md](docs/uvoo-xyz-redirect.md) for the separate
+`uvoo.xyz` to `www.uvoo.xyz` DNS, certificate, and redirect procedure.
+
 ## Cost controls
 
 - Consumption profile: no dedicated always-on compute

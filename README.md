@@ -101,6 +101,32 @@ terraform apply \
 Names must use lowercase letters, numbers, and hyphens. If the generated
 Container App hostname conflicts, choose a more distinctive `name_prefix`.
 
+## Custom domain
+
+The apex domain defaults to `uvoo.xyz` and is deliberately enabled in two
+phases so the deployment does not fail before public DNS is ready.
+
+First leave `enable_custom_domain = false`, apply, and read:
+
+```bash
+terraform output custom_domain_dns_records
+```
+
+Create the reported `A` record for `@` and `TXT` record for `asuid` in the
+registrar's DNS control panel. Do not point the domain at a revision-specific
+hostname.
+
+After public DNS resolves, set the variable default to `true` or deploy with:
+
+```bash
+terraform apply -var='enable_custom_domain=true'
+```
+
+Azure Container Apps then validates `uvoo.xyz`, binds it to the app, and
+issues a free managed TLS certificate. GitHub Actions uses variable defaults,
+so a permanent CI deployment should change the default in `variables.tf` to
+`true` in a second pull request after the DNS records exist.
+
 ## Cost controls
 
 - Consumption profile: no dedicated always-on compute

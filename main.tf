@@ -55,3 +55,19 @@ resource "azurerm_container_app" "this" {
     }
   }
 }
+
+resource "azurerm_container_app_custom_domain" "this" {
+  count = var.enable_custom_domain ? 1 : 0
+
+  name             = var.custom_domain
+  container_app_id = azurerm_container_app.this.id
+
+  # Azure populates these asynchronously when issuing its free managed
+  # certificate. Ignoring them prevents Terraform from undoing the binding.
+  lifecycle {
+    ignore_changes = [
+      certificate_binding_type,
+      container_app_environment_certificate_id
+    ]
+  }
+}

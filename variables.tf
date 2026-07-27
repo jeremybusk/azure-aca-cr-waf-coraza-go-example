@@ -30,6 +30,17 @@ variable "name_prefix" {
   }
 }
 
+variable "container_image" {
+  description = "Public Caddy image with Coraza WAF and the OWASP Core Rule Set."
+  type        = string
+  default     = "ghcr.io/coreruleset/coraza-crs:4.25.0-caddy-alpine-202604120304"
+
+  validation {
+    condition     = length(trimspace(var.container_image)) > 0
+    error_message = "container_image must not be empty."
+  }
+}
+
 variable "custom_domain" {
   description = "Apex custom domain to bind to the Container App."
   type        = string
@@ -64,7 +75,7 @@ variable "tags" {
   description = "Tags applied to the Azure resources."
   type        = map(string)
   default = {
-    application = "nginx-hello-world"
+    application = "caddy-coraza-hello-world"
     environment = "test"
     managed-by  = "terraform"
   }

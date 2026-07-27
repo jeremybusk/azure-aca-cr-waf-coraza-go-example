@@ -14,7 +14,7 @@ uvoo.xyz
         hello-nginx-app ingress
                     |
                     v
-           NGINX container
+       Caddy + Coraza container
 ```
 
 The generated Container Apps hostname remains available as a fallback:

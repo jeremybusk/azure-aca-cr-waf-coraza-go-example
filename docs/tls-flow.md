@@ -7,7 +7,8 @@ Browser
   → DNS: uvoo.xyz resolves to Container Apps environment IP
   → Azure Container Apps ingress terminates TLS
   → Azure routes the request to hello-nginx-app
-  → NGINX receives traffic on container port 80
+  → Caddy receives traffic on container port 8080
+  → Coraza and OWASP CRS inspect the request
 ```
 
 Certificate lifecycle:

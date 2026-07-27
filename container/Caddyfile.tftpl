@@ -1,0 +1,32 @@
+{
+	admin off
+	auto_https off
+	order coraza_waf first
+}
+
+:8080 {
+	coraza_waf {
+		load_owasp_crs
+		directives `
+			Include @coraza.conf-recommended
+			Include @crs-setup.conf.example
+			Include @owasp_crs/*.conf
+			SecRuleEngine On
+			SecAction "id:900000,phase:1,pass,nolog,setvar:tx.paranoia_level=1"
+			SecAction "id:900110,phase:1,pass,nolog,setvar:tx.inbound_anomaly_score_threshold=5,setvar:tx.outbound_anomaly_score_threshold=4"
+		`
+	}
+
+	@apex host ${redirect_apex_domain}
+	redir @apex https://${primary_www_domain}{uri} permanent
+
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+	}
+
+	root * /tmp/caddy-site
+	file_server
+}

@@ -28,7 +28,7 @@ resource "azurerm_container_app" "this" {
 
   ingress {
     external_enabled = true
-    target_port      = 80
+    target_port      = 8080
     transport        = "auto"
 
     traffic_weight {
@@ -42,15 +42,18 @@ resource "azurerm_container_app" "this" {
     max_replicas = 1
 
     container {
-      name   = "nginx"
-      image  = "nginx:alpine"
+      name   = "caddy-coraza"
+      image  = var.container_image
       cpu    = 0.25
       memory = "0.5Gi"
 
       command = ["/bin/sh"]
       args = [
         "-c",
-        "printf '%s\n' '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Hello All from Azure</title></head><body><h1>Hello All, World!</h1><p>NGINX is running on Azure Container Apps.</p></body></html>' > /usr/share/nginx/html/index.html && printf '%s\n' 'server { listen 80; server_name ${var.redirect_apex_domain}; return 301 https://${var.primary_www_domain}$request_uri; } server { listen 80 default_server; server_name ${var.primary_www_domain} _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ =404; } }' > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
+        "mkdir -p /tmp/caddy-site && printf '%s' '${base64encode(templatefile("${path.module}/container/Caddyfile.tftpl", {
+          redirect_apex_domain = var.redirect_apex_domain
+          primary_www_domain   = var.primary_www_domain
+        }))}' | base64 -d > /tmp/Caddyfile && printf '%s' '${base64encode(file("${path.module}/container/index.html"))}' | base64 -d > /tmp/caddy-site/index.html && exec caddy run --config /tmp/Caddyfile --adapter caddyfile"
       ]
     }
   }

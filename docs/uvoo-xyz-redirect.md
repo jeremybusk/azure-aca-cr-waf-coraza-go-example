@@ -14,7 +14,7 @@ https://uvoo.xyz
 
 Both hostnames must be added to Azure Container Apps and both need managed TLS
 certificates. The existing configuration already manages and secures
-`uvoo.xyz`; this procedure adds `www.uvoo.xyz`. The redirect happens in NGINX
+`uvoo.xyz`; this procedure adds `www.uvoo.xyz`. The redirect happens in Caddy
 after Container Apps terminates TLS for the apex hostname.
 
 ## Phase 1: configure DNS
@@ -58,7 +58,7 @@ variable "enable_www_custom_domain" {
 ```
 
 Plan and apply. Terraform creates the additional `www.uvoo.xyz` hostname
-record and deploys the NGINX redirect configuration.
+record and deploys the Caddy redirect configuration.
 
 ## Phase 3: bind the www managed certificate
 

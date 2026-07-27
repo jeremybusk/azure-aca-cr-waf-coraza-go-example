@@ -1,16 +1,19 @@
-# Azure NGINX Hello World
+# Azure Caddy + Coraza Hello World
 
-A minimal NGINX site deployed to **Azure Container Apps** with Terraform.
-It uses the Consumption workload profile, scales to zero while idle, and is
-capped at one small replica to keep test costs low.
+A minimal static site protected by **Caddy, Coraza WAF, and OWASP Core Rule
+Set (CRS)** and deployed to **Azure Container Apps** with Terraform. It uses
+the Consumption workload profile, scales to zero while idle, and is capped at
+one small replica to keep test costs low.
 
 ## What gets created
 
 - One Azure resource group
 - One Azure Container Apps environment
-- One public Container App running the official `nginx:alpine` image
+- One public Container App running the official CRS `4.25` LTS Caddy image
 
-The NGINX startup command writes the Hello World page into the container, so
+The public image already contains Caddy, Coraza, and CRS. Terraform injects
+[`container/Caddyfile.tftpl`](container/Caddyfile.tftpl) and
+[`container/index.html`](container/index.html) when the container starts, so
 there is no image build and no Azure Container Registry to pay for. Log
 Analytics, Application Insights, a virtual network, and a dedicated workload
 profile are deliberately omitted.
@@ -89,7 +92,9 @@ Azure starts a replica.
 
 ### Customize
 
-Defaults deploy to `westus2` with names prefixed by `hello-nginx`. Override
+Defaults deploy to `westus2` with the existing Azure resource names prefixed
+by `hello-nginx`. Keeping that default avoids replacing resources and changing
+the established state. Override
 them on the command line:
 
 ```bash
@@ -136,13 +141,24 @@ verification, certificate-binding, and troubleshooting runbook.
 See [docs/uvoo-xyz-redirect.md](docs/uvoo-xyz-redirect.md) for the separate
 `uvoo.xyz` to `www.uvoo.xyz` DNS, certificate, and redirect procedure.
 
+## Web application firewall
+
+Coraza runs before the redirect and file server with OWASP CRS 4.25 LTS in
+blocking mode. The initial policy uses paranoia level 1 and the standard
+inbound anomaly threshold of 5. This conservative baseline is appropriate for
+a public test site and reduces false positives.
+
+See [docs/waf.md](docs/waf.md) for safe verification commands, detection-only
+mode, tuning guidance, upgrades, and troubleshooting.
+
 ## Cost controls
 
 - Consumption profile: no dedicated always-on compute
 - `min_replicas = 0`: the app can scale to zero
 - `max_replicas = 1`: traffic cannot create multiple replicas
 - 0.25 vCPU and 0.5 GiB: smallest supported general-purpose allocation
-- No Log Analytics workspace, registry, public IP resource, or virtual network
+- Public prebuilt WAF image: no paid container registry
+- No Log Analytics workspace, public IP resource, or virtual network
 
 Azure's monthly Container Apps free grant is shared by the subscription, not
 reserved for this deployment. Usage beyond the grant, outbound data transfer,

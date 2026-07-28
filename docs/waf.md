@@ -1,30 +1,56 @@
-# Coraza and OWASP CRS
+# Coraza, OWASP CRS, and GeoIP
 
-The Container App runs the public image:
+The Container App runs an immutable private image:
 
 ```text
-ghcr.io/coreruleset/coraza-crs:4.25.0-caddy-alpine-202604120304
+uvooacrprodwus2001.azurecr.io/hello-world:<git-sha>
 ```
 
 Azure Container Apps terminates public TLS and forwards HTTP to port 8080 in
-the replica. Caddy evaluates every request with Coraza and OWASP CRS before it
-redirects the apex hostname or serves the static page.
+the replica. Caddy resolves the sender's country, evaluates the generated
+country policy, then evaluates allowed requests with Coraza and OWASP CRS.
 
 ```text
-Internet → Azure Container Apps ingress → Caddy → Coraza/CRS → static site
+Internet → Container Apps ingress → GeoIP policy → Coraza/CRS → static site
 ```
 
-The configuration is in
-[`../container/Caddyfile.tftpl`](../container/Caddyfile.tftpl). The initial
-policy enables blocking, paranoia level 1, inbound anomaly threshold 5, and
-outbound anomaly threshold 4.
+Application files are under
+[`../applications/hello-world/`](../applications/hello-world/). The image runs
+without root privileges. Its wrapper copies the baked Caddyfile into the
+base image's supported writable configuration directory, then invokes the
+upstream entrypoint to generate Coraza configuration and activate CRS.
 
-The official container runs without root privileges. Terraform writes the
-rendered Caddy override to its supported writable location,
-`/config/caddy/Caddyfile`, and writes the static page under
-`/tmp/caddy-site`. The image entrypoint copies and formats the Caddy override,
-generates Coraza's environment-driven configuration, and activates CRS before
-starting Caddy. The image's `/srv` directory remains read-only.
+## GeoIP policy
+
+Edit
+[`geoip-policy.yaml`](../applications/hello-world/config/geoip-policy.yaml):
+
+```yaml
+version: 1
+enabled: true
+mode: blocklist
+countries:
+  - XX
+  - YY
+unknown_country: allow
+```
+
+`blocklist` rejects listed ISO 3166-1 alpha-2 country codes. `allowlist`
+rejects every known country not listed. `unknown_country` controls addresses
+that cannot be resolved. An enabled allowlist must not be empty.
+
+The build validates the schema, rejects duplicate or malformed country codes,
+and generates a Caddy expression snippet. The default policy is an empty
+blocklist, so GeoIP is active but does not block a real country until the list
+is deliberately populated.
+
+Set `enabled: false` to build without GeoIP. In that mode the MaxMind BuildKit
+secret is optional and the image uses `Caddyfile.no-geo`.
+
+Azure appends the trustworthy sender address at the right side of
+`X-Forwarded-For`. Caddy trusts only connections from private ingress proxy
+ranges and enables `trusted_proxies_strict`, so it evaluates the header
+right-to-left rather than accepting a spoofable leftmost value.
 
 ## Verify normal traffic
 
@@ -70,16 +96,16 @@ az containerapp logs show \
 
 ## Detection-only mode
 
-For initial tuning of a real application, change this directive:
+For initial tuning of a real application, set this image environment value:
 
 ```text
-SecRuleEngine On
+CORAZA_RULE_ENGINE=DetectionOnly
 ```
 
-to:
+Restore blocking with:
 
 ```text
-SecRuleEngine DetectionOnly
+CORAZA_RULE_ENGINE=On
 ```
 
 Apply the change, exercise representative requests, and review WAF events
@@ -97,25 +123,22 @@ Test normal requests and known attack-shaped requests after every tuning
 change. Do not log authorization headers, cookies, or request bodies unless
 the security need outweighs the data-exposure risk.
 
-## Upgrade CRS
+## Database and image updates
 
-The image uses the immutable dated tag
-`4.25.0-caddy-alpine-202604120304`. Changing the tag creates a new Container
-Apps revision. Review the CRS release notes and repeat the normal/blocking
-verification tests before upgrading. Verify a prospective tag exists before
-planning:
+GitHub Actions downloads the current GeoLite2 Country release during an
+approved deployment. Local builds pass a dated archive from the ignored
+`tmp/` directory as the `geolite_archive` BuildKit secret. Never commit the
+archive or extracted database.
 
-```bash
-docker buildx imagetools inspect \
-  ghcr.io/coreruleset/coraza-crs:4.25.0-caddy-alpine-202604120304
-```
-
-This command is read-only and does not need to pull the image layers.
+The Dockerfile pins Caddy, Coraza-Caddy, the GeoIP module, and its base CRS
+image. Review upstream releases and verification tests before changing those
+pins. Every GitHub deployment pushes a commit-SHA tag, so Terraform never
+deploys `latest`.
 
 ## Cost and scaling
 
-Coraza and CRS share the existing Caddy container allocation of 0.25 vCPU and
-0.5 GiB. The app keeps `min_replicas = 0` and `max_replicas = 1`, so it can
-scale to zero and cannot create unexpected replica fan-out. If the revision
-restarts because it exceeds memory, increase the allocation to 0.5 vCPU and
-1 GiB and reassess the cost after observing real traffic.
+Caddy, GeoIP, Coraza, and CRS share 0.25 vCPU and 0.5 GiB. The app keeps
+`min_replicas = 0` and `max_replicas = 1`, so compute can scale to zero and
+cannot create unexpected replica fan-out. ACR Basic has a separate fixed
+charge. If the revision exceeds memory, increase the allocation to 0.5 vCPU
+and 1 GiB and reassess after observing real traffic.

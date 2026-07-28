@@ -30,14 +30,28 @@ jobs:
       - name: Check formatting
         run: terraform fmt -check -recursive
 
-      - name: Initialize without remote state
-        run: terraform init -backend=false
+      - name: Validate Terraform stacks
+        run: |
+          for directory in . bootstrap infrastructure/container-registry
+          do
+            terraform -chdir="$directory" init -backend=false
+            terraform -chdir="$directory" validate
+          done
 
-      - name: Validate configuration
-        run: terraform validate
+      - name: Validate GeoIP policy generator
+        run: |
+          python -m pip install --disable-pip-version-check PyYAML==6.0.2
+          python applications/hello-world/scripts/generate_geoip_policy.py \
+            --input applications/hello-world/config/geoip-policy.yaml \
+            --output /tmp/geoip-policy.caddy \
+            --enabled-marker /tmp/geoip-enabled
+          test -s /tmp/geoip-policy.caddy
+          python -m unittest discover \
+            --start-directory applications/hello-world/tests \
+            --pattern 'test_*.py'
 
   deploy:
-    name: Plan and apply
+    name: Build, plan and apply
     if: github.event_name != 'pull_request'
     needs: validate
     runs-on: ubuntu-latest
@@ -61,6 +75,10 @@ jobs:
           TF_STATE_RESOURCE_GROUP: ${{ vars.TF_STATE_RESOURCE_GROUP }}
           TF_STATE_STORAGE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
           TF_STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+          ACR_NAME: ${{ vars.ACR_NAME }}
+          ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER }}
+          ACR_PULL_IDENTITY_ID: ${{ vars.ACR_PULL_IDENTITY_ID }}
+          CONTAINER_IMAGE_REPOSITORY: ${{ vars.CONTAINER_IMAGE_REPOSITORY }}
         run: |
           missing=0
           for name in \
@@ -69,7 +87,11 @@ jobs:
             AZURE_SUBSCRIPTION_ID \
             TF_STATE_RESOURCE_GROUP \
             TF_STATE_STORAGE_ACCOUNT \
-            TF_STATE_CONTAINER
+            TF_STATE_CONTAINER \
+            ACR_NAME \
+            ACR_LOGIN_SERVER \
+            ACR_PULL_IDENTITY_ID \
+            CONTAINER_IMAGE_REPOSITORY
           do
             if [ -z "$(printenv "$name")" ]; then
               echo "::error::$name is not configured as a GitHub Actions variable"
@@ -88,6 +110,55 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           auth-type: SERVICE_PRINCIPAL
+
+      - name: Check MaxMind configuration
+        env:
+          MAXMIND_ACCOUNT_ID: ${{ secrets.MAXMIND_ACCOUNT_ID }}
+          MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
+        run: |
+          missing=0
+          for name in MAXMIND_ACCOUNT_ID MAXMIND_LICENSE_KEY
+          do
+            if [ -z "$(printenv "$name")" ]; then
+              echo "::error::$name is not configured as a GitHub Actions environment secret"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
+      - name: Download current GeoLite2 Country database
+        env:
+          MAXMIND_ACCOUNT_ID: ${{ secrets.MAXMIND_ACCOUNT_ID }}
+          MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
+        run: |
+          curl \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            --user "${MAXMIND_ACCOUNT_ID}:${MAXMIND_LICENSE_KEY}" \
+            --output "${RUNNER_TEMP}/GeoLite2-Country.tar.gz" \
+            "https://download.maxmind.com/geoip/databases/GeoLite2-Country/download?suffix=tar.gz"
+          tar -tzf "${RUNNER_TEMP}/GeoLite2-Country.tar.gz" \
+            | grep -q '/GeoLite2-Country.mmdb$'
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Build and push immutable application image
+        env:
+          DOCKER_BUILDKIT: "1"
+          IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.CONTAINER_IMAGE_REPOSITORY }}:${{ github.sha }}
+        run: |
+          docker build \
+            --secret "id=geolite_archive,src=${RUNNER_TEMP}/GeoLite2-Country.tar.gz" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --tag "$IMAGE" \
+            applications/hello-world
+          docker push "$IMAGE"
+          echo "TF_VAR_container_image=$IMAGE" >> "$GITHUB_ENV"
+          echo "TF_VAR_container_registry_server=${{ vars.ACR_LOGIN_SERVER }}" >> "$GITHUB_ENV"
+          echo "TF_VAR_container_registry_identity_id=${{ vars.ACR_PULL_IDENTITY_ID }}" >> "$GITHUB_ENV"
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v4

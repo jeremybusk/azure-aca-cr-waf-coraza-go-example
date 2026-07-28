@@ -31,13 +31,32 @@ variable "name_prefix" {
 }
 
 variable "container_image" {
-  description = "Public Caddy image with Coraza WAF and the OWASP Core Rule Set."
+  description = "Immutable ACR image reference, preferably tagged with the Git commit SHA."
   type        = string
-  default     = "ghcr.io/coreruleset/coraza-crs:4.25.0-caddy-alpine-202604120304"
 
   validation {
-    condition     = length(trimspace(var.container_image)) > 0
-    error_message = "container_image must not be empty."
+    condition     = can(regex("^[a-z0-9.-]+\\.azurecr\\.io/[a-z0-9._/-]+:[A-Za-z0-9._-]+$", trimspace(var.container_image)))
+    error_message = "container_image must be a tagged Azure Container Registry image."
+  }
+}
+
+variable "container_registry_server" {
+  description = "ACR login server, for example uvooacrprodwus2001.azurecr.io."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9]+\\.azurecr\\.io$", trimspace(var.container_registry_server)))
+    error_message = "container_registry_server must be an Azure Container Registry login server."
+  }
+}
+
+variable "container_registry_identity_id" {
+  description = "Resource ID of the user-assigned identity granted AcrPull."
+  type        = string
+
+  validation {
+    condition     = can(regex("(?i)^/subscriptions/[0-9a-f-]+/resourceGroups/[^/]+/providers/Microsoft\\.ManagedIdentity/userAssignedIdentities/[^/]+$", trimspace(var.container_registry_identity_id)))
+    error_message = "container_registry_identity_id must be a user-assigned managed identity resource ID."
   }
 }
 

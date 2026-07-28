@@ -9,16 +9,17 @@
 		include /templates/coraza-rules.conf
 	}
 
-	@apex host ${redirect_apex_domain}
-	redir @apex https://${primary_www_domain}{uri} permanent
+	@apex host uvoo.xyz
+	redir @apex https://www.uvoo.xyz{uri} permanent
 
 	header {
 		-Server
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
 		Referrer-Policy no-referrer
+		Cache-Control no-cache
 	}
 
-	root * /tmp/caddy-site
+	root * /opt/app/public
 	file_server
 }

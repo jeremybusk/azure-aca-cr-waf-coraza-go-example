@@ -26,6 +26,16 @@ resource "azurerm_container_app" "this" {
   workload_profile_name        = "Consumption"
   tags                         = var.tags
 
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [var.container_registry_identity_id]
+  }
+
+  registry {
+    server   = var.container_registry_server
+    identity = var.container_registry_identity_id
+  }
+
   ingress {
     external_enabled = true
     target_port      = 8080
@@ -46,15 +56,6 @@ resource "azurerm_container_app" "this" {
       image  = var.container_image
       cpu    = 0.25
       memory = "0.5Gi"
-
-      command = ["/bin/sh"]
-      args = [
-        "-c",
-        "mkdir -p /config/caddy /tmp/caddy-site && printf '%s' '${base64encode(templatefile("${path.module}/container/Caddyfile.tftpl", {
-          redirect_apex_domain = var.redirect_apex_domain
-          primary_www_domain   = var.primary_www_domain
-        }))}' | base64 -d > /config/caddy/Caddyfile && printf '%s' '${base64encode(file("${path.module}/container/index.html"))}' | base64 -d > /tmp/caddy-site/index.html && exec /entrypoint.sh caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
-      ]
     }
   }
 }

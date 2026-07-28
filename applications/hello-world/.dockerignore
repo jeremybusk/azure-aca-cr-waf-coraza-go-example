@@ -1,0 +1,11 @@
+**
+!Dockerfile
+!Caddyfile
+!Caddyfile.no-geo
+!config/
+!config/geoip-policy.yaml
+!public/
+!public/index.html
+!scripts/
+!scripts/entrypoint.sh
+!scripts/generate_geoip_policy.py

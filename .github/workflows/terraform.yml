@@ -150,8 +150,11 @@ jobs:
           DOCKER_BUILDKIT: "1"
           IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.CONTAINER_IMAGE_REPOSITORY }}:${{ github.sha }}
         run: |
+          mkdir -p applications/hello-world/.build
+          cp "${RUNNER_TEMP}/GeoLite2-Country.tar.gz" \
+            applications/hello-world/.build/GeoLite2-Country.tar.gz
+          trap 'rm -f applications/hello-world/.build/GeoLite2-Country.tar.gz' EXIT
           docker build \
-            --secret "id=geolite_archive,src=${RUNNER_TEMP}/GeoLite2-Country.tar.gz" \
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
             --tag "$IMAGE" \
             applications/hello-world

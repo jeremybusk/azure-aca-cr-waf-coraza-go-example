@@ -19,6 +19,8 @@ tmp/
 trash/
 __pycache__/
 *.pyc
+applications/hello-world/.build/*
+!applications/hello-world/.build/.gitkeep
 terraform.tfvars
 *.auto.tfvars
 notes/

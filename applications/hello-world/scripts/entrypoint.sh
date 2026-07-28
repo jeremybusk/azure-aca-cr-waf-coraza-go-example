@@ -3,7 +3,7 @@ set -eu
 
 if grep -qx true /opt/app/geoip-enabled; then
   if [ ! -s /opt/geoip/GeoLite2-Country.mmdb ]; then
-    echo >&2 "GeoLite2-Country.mmdb is missing; rebuild with the geolite_archive BuildKit secret"
+    echo >&2 "GeoLite2-Country.mmdb is missing; rebuild with the GeoLite2 archive in the build context"
     exit 1
   fi
   source_caddyfile=/opt/app/Caddyfile

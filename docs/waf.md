@@ -44,8 +44,8 @@ and generates a Caddy expression snippet. The default policy is an empty
 blocklist, so GeoIP is active but does not block a real country until the list
 is deliberately populated.
 
-Set `enabled: false` to build without GeoIP. In that mode the MaxMind BuildKit
-secret is optional and the image uses `Caddyfile.no-geo`.
+Set `enabled: false` to build without GeoIP. In that mode no MaxMind archive
+is required and the image uses `Caddyfile.no-geo`.
 
 Azure appends the trustworthy sender address at the right side of
 `X-Forwarded-For`. Caddy trusts only connections from private ingress proxy
@@ -126,9 +126,9 @@ the security need outweighs the data-exposure risk.
 ## Database and image updates
 
 GitHub Actions downloads the current GeoLite2 Country release during an
-approved deployment. Local builds pass a dated archive from the ignored
-`tmp/` directory as the `geolite_archive` BuildKit secret. Never commit the
-archive or extracted database.
+approved deployment and temporarily stages it under the ignored application
+`.build/` directory. Local builds can copy a dated archive there from the
+ignored `tmp/` directory. Never commit the archive or extracted database.
 
 The Dockerfile pins Caddy, Coraza-Caddy, the GeoIP module, and its base CRS
 image. Review upstream releases and verification tests before changing those

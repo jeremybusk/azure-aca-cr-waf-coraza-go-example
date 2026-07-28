@@ -4,6 +4,9 @@
 !Caddyfile.no-geo
 !config/
 !config/geoip-policy.yaml
+!.build/
+!.build/.gitkeep
+!.build/GeoLite2-Country.tar.gz
 !public/
 !public/index.html
 !scripts/

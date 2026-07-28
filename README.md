@@ -228,7 +228,7 @@ variables rather than secrets. The federated identity must exactly match the
 repository and `azure` environment configured above.
 
 On an approved deployment, the workflow downloads the current GeoLite2
-Country archive, supplies it to Docker as a BuildKit secret, pushes
+Country archive, stages it temporarily in the Docker build context, pushes
 `hello-world:<git-sha>` to ACR, and passes that exact tag to Terraform. MaxMind
 credentials are never Terraform inputs and do not enter Terraform state.
 

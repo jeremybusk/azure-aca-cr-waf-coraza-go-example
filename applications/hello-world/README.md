@@ -30,20 +30,23 @@ empty enabled allowlist is rejected to prevent an accidental global lockout.
 From the repository root:
 
 ```bash
+cp tmp/GeoLite2-Country_20260724.tar.gz \
+  applications/hello-world/.build/GeoLite2-Country.tar.gz
 docker build \
-  --secret id=geolite_archive,src=tmp/GeoLite2-Country_20260724.tar.gz \
   --tag hello-world:local \
   applications/hello-world
+rm applications/hello-world/.build/GeoLite2-Country.tar.gz
 ```
 
 The tarball must contain `GeoLite2-Country.mmdb`, `COPYRIGHT.txt`, and
-`LICENSE.txt` beneath one top-level directory. BuildKit mounts the archive
-only for the extraction step, so the tarball and download credentials do not
-become image layers.
+`LICENSE.txt` beneath one top-level directory. The temporary `.build` input is
+git-ignored. The archive is consumed in an intermediate stage and is not
+copied into the final runtime image. MaxMind download credentials are never
+passed to Docker.
 
 ## Build without GeoIP
 
-Set `enabled: false`, then build without `--secret`:
+Set `enabled: false`, then build without staging an archive:
 
 ```bash
 docker build --tag hello-world:local applications/hello-world

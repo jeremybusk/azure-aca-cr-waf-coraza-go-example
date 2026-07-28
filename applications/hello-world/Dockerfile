@@ -17,22 +17,23 @@ WORKDIR /src
 RUN pip install --no-cache-dir PyYAML==6.0.2
 COPY config/geoip-policy.yaml config/geoip-policy.yaml
 COPY scripts/generate_geoip_policy.py scripts/generate_geoip_policy.py
+COPY .build/ /tmp/build/
 RUN mkdir -p /out/geoip \
     && python scripts/generate_geoip_policy.py \
          --input config/geoip-policy.yaml \
          --output /out/geoip-policy.caddy \
          --enabled-marker /out/geoip-enabled
-RUN --mount=type=secret,id=geolite_archive \
-    if grep -qx true /out/geoip-enabled; then \
-      test -s /run/secrets/geolite_archive \
-      || { echo >&2 "GeoIP is enabled, but geolite_archive was not supplied as a BuildKit secret"; exit 1; }; \
+RUN if grep -qx true /out/geoip-enabled; then \
+      test -s /tmp/build/GeoLite2-Country.tar.gz \
+      || { echo >&2 "GeoIP is enabled, but .build/GeoLite2-Country.tar.gz is missing"; exit 1; }; \
       mkdir -p /tmp/geolite; \
-      tar -xzf /run/secrets/geolite_archive -C /tmp/geolite; \
+      tar -xzf /tmp/build/GeoLite2-Country.tar.gz -C /tmp/geolite; \
       cp /tmp/geolite/*/GeoLite2-Country.mmdb /out/geoip/; \
       cp /tmp/geolite/*/COPYRIGHT.txt /out/geoip/; \
       cp /tmp/geolite/*/LICENSE.txt /out/geoip/; \
       test -s /out/geoip/GeoLite2-Country.mmdb; \
-    fi
+    fi \
+    && rm -rf /tmp/build /tmp/geolite
 
 FROM ${CORAZA_CRS_IMAGE} AS runtime
 LABEL org.opencontainers.image.source="https://github.com/jeremybusk/azuresdx1" \

@@ -3,13 +3,20 @@
 	auto_https off
 	order coraza_waf first
 	servers {
-		trusted_proxies static private_ranges
+		# Container Apps ingress can reach the replica from RFC1918 or shared
+		# address space. Azure appends the real client as the rightmost XFF IP.
+		trusted_proxies static private_ranges 100.64.0.0/10
 		trusted_proxies_strict
 		client_ip_headers X-Forwarded-For
 	}
 }
 
 :8080 {
+	log {
+		output stdout
+		format json
+	}
+
 	import /opt/app/geoip-policy.caddy
 
 	coraza_waf {

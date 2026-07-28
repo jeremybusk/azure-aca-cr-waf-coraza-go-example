@@ -54,8 +54,11 @@ is required and the image uses `Caddyfile.no-geo`.
 
 Azure appends the trustworthy sender address at the right side of
 `X-Forwarded-For`. Caddy trusts only connections from private ingress proxy
-ranges and enables `trusted_proxies_strict`, so it evaluates the header
-right-to-left rather than accepting a spoofable leftmost value.
+ranges, including the `100.64.0.0/10` shared address space used by internal
+service networking, and enables `trusted_proxies_strict`. It therefore
+evaluates the header right-to-left rather than accepting a spoofable leftmost
+value. JSON access logs include both the immediate peer and parsed client IP
+for troubleshooting.
 
 ## Verify normal traffic
 

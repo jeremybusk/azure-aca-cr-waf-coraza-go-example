@@ -1,0 +1,25 @@
+{
+	admin off
+	auto_https off
+	order coraza_waf first
+}
+
+:8080 {
+	coraza_waf {
+		include /templates/coraza-rules.conf
+	}
+
+	@apex host uvoo.xyz
+	redir @apex https://www.uvoo.xyz{uri} permanent
+
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Cache-Control no-cache
+	}
+
+	root * /opt/app/public
+	file_server
+}

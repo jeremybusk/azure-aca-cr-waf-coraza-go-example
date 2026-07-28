@@ -1,0 +1,5 @@
+resource_group_name  = "rg-tfstate-prod-westus2-001"
+storage_account_name = "uvoosttfstateprodwus2001"
+container_name       = "tfstate"
+key                  = "azuresdx1/prod/container-registry.tfstate"
+use_azuread_auth     = true

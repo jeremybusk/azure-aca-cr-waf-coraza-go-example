@@ -1,8 +1,8 @@
 .terraform/
-.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 *.tfplan
+tfplan
 terraform.tfvars
 *.auto.tfvars
 backend.hcl
@@ -17,6 +17,9 @@ override.tf.json
 *_override.tf.json
 tmp/
 trash/
+__pycache__/
+*.pyc
 terraform.tfvars
 *.auto.tfvars
 notes/
+.terraform.lock.hcl

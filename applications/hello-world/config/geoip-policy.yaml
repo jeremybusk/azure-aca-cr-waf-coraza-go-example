@@ -1,0 +1,5 @@
+version: 1
+enabled: true
+mode: blocklist
+countries: []
+unknown_country: allow

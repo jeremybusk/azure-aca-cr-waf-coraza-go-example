@@ -26,9 +26,19 @@ resource "azurerm_container_app" "this" {
   workload_profile_name        = "Consumption"
   tags                         = var.tags
 
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [var.container_registry_identity_id]
+  }
+
+  registry {
+    server   = var.container_registry_server
+    identity = var.container_registry_identity_id
+  }
+
   ingress {
     external_enabled = true
-    target_port      = 80
+    target_port      = 8080
     transport        = "auto"
 
     traffic_weight {
@@ -42,16 +52,10 @@ resource "azurerm_container_app" "this" {
     max_replicas = 1
 
     container {
-      name   = "nginx"
-      image  = "nginx:alpine"
+      name   = "caddy-coraza"
+      image  = var.container_image
       cpu    = 0.25
       memory = "0.5Gi"
-
-      command = ["/bin/sh"]
-      args = [
-        "-c",
-        "printf '%s\n' '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Hello All from Azure</title></head><body><h1>Hello All, World!</h1><p>NGINX is running on Azure Container Apps.</p></body></html>' > /usr/share/nginx/html/index.html && exec nginx -g 'daemon off;'"
-      ]
     }
   }
 }
@@ -64,6 +68,20 @@ resource "azurerm_container_app_custom_domain" "this" {
 
   # Azure populates these asynchronously when issuing its free managed
   # certificate. Ignoring them prevents Terraform from undoing the binding.
+  lifecycle {
+    ignore_changes = [
+      certificate_binding_type,
+      container_app_environment_certificate_id
+    ]
+  }
+}
+
+resource "azurerm_container_app_custom_domain" "www" {
+  count = var.enable_www_custom_domain ? 1 : 0
+
+  name             = var.primary_www_domain
+  container_app_id = azurerm_container_app.this.id
+
   lifecycle {
     ignore_changes = [
       certificate_binding_type,

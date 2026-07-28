@@ -120,7 +120,7 @@ jobs:
           for name in MAXMIND_ACCOUNT_ID MAXMIND_LICENSE_KEY
           do
             if [ -z "$(printenv "$name")" ]; then
-              echo "::error::$name is not configured as a GitHub Actions environment secret"
+              echo "::error::$name is not configured in the GitHub azure environment"
               missing=1
             fi
           done
@@ -128,7 +128,7 @@ jobs:
 
       - name: Download current GeoLite2 Country database
         env:
-          MAXMIND_ACCOUNT_ID: ${{ secrets.MAXMIND_ACCOUNT_ID }}
+          MAXMIND_ACCOUNT_ID: ${{ vars.MAXMIND_ACCOUNT_ID }}
           MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
         run: |
           curl \

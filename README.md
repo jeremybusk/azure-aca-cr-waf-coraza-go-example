@@ -215,12 +215,12 @@ and variables → Actions → Variables**:
 | `ACR_LOGIN_SERVER` | ACR hostname ending in `.azurecr.io` |
 | `ACR_PULL_IDENTITY_ID` | Resource ID of the identity granted `AcrPull` |
 | `CONTAINER_IMAGE_REPOSITORY` | ACR repository name, normally `hello-world` |
+| `MAXMIND_ACCOUNT_ID` | MaxMind account ID used only during the image build |
 
-Add these GitHub **environment secrets** to the `azure` environment:
+Add this GitHub **environment secret** to the `azure` environment:
 
 | Secret | Value |
 | --- | --- |
-| `MAXMIND_ACCOUNT_ID` | MaxMind account ID used only during the image build |
 | `MAXMIND_LICENSE_KEY` | MaxMind license key used only during the image build |
 
 The three Azure IDs are identifiers, not credentials. They may be stored as

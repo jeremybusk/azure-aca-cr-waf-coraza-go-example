@@ -39,6 +39,11 @@ FROM ${CORAZA_CRS_IMAGE} AS runtime
 LABEL org.opencontainers.image.source="https://github.com/jeremybusk/azuresdx1" \
       org.opencontainers.image.description="Caddy with Coraza, OWASP CRS, and optional MaxMind GeoLite2 country policy"
 
+# Coraza-Caddy rejects metadata actions such as `tag` in SecDefaultAction.
+# Override the base image defaults while retaining its phase, pass, and log behavior.
+ENV CORAZA_DEFAULT_PHASE1_ACTION="phase:1,pass,log" \
+    CORAZA_DEFAULT_PHASE2_ACTION="phase:2,pass,log"
+
 COPY --from=caddy-builder /usr/bin/caddy /usr/bin/caddy
 COPY --from=policy-builder --chown=caddy:caddy /out/geoip /opt/geoip
 COPY --from=policy-builder --chown=caddy:caddy /out/geoip-policy.caddy /opt/app/geoip-policy.caddy

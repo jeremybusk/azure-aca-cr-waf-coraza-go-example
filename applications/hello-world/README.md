@@ -19,11 +19,16 @@ enabled: true
 mode: blocklist
 countries:
   - XX
+allow_ips:
+  - 203.0.113.42/32
+  - 2001:db8:1234::/64
 unknown_country: allow
 ```
 
 Use uppercase ISO 3166-1 alpha-2 codes. An empty blocklist blocks nothing. An
 empty enabled allowlist is rejected to prevent an accidental global lockout.
+`allow_ips` entries must be canonical IPv4 or IPv6 CIDRs. They bypass only the
+GeoIP country decision; requests still pass through Coraza and OWASP CRS.
 
 ## Build with GeoIP
 

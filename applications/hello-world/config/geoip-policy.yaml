@@ -3,4 +3,5 @@ enabled: true
 mode: blocklist
 countries:
   - US
+allow_ips: []
 unknown_country: allow

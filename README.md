@@ -216,6 +216,7 @@ and variables → Actions → Variables**:
 | `ACR_PULL_IDENTITY_ID` | Resource ID of the identity granted `AcrPull` |
 | `CONTAINER_IMAGE_REPOSITORY` | ACR repository name, normally `hello-world` |
 | `MAXMIND_ACCOUNT_ID` | MaxMind account ID used only during the image build |
+| `GEOIP_DATABASE_VERSION` | Cache version such as `2026-07`; change it only when a fresh GeoLite2 download is wanted |
 
 Add this GitHub **environment secret** to the `azure` environment:
 
@@ -227,10 +228,17 @@ The three Azure IDs are identifiers, not credentials. They may be stored as
 variables rather than secrets. The federated identity must exactly match the
 repository and `azure` environment configured above.
 
-On an approved deployment, the workflow downloads the current GeoLite2
-Country archive, stages it temporarily in the Docker build context, pushes
+On an approved deployment, the workflow restores the GeoLite2 Country archive
+from a versioned GitHub Actions cache. A cache miss downloads a current copy
+from MaxMind. The workflow stages it temporarily in the Docker build context, pushes
 `hello-world:<git-sha>` to ACR, and passes that exact tag to Terraform. MaxMind
 credentials are never Terraform inputs and do not enter Terraform state.
+
+Country-policy changes still create a new immutable application image, but
+they reuse the cached database. To intentionally refresh the database, change
+`GEOIP_DATABASE_VERSION` in the GitHub `azure` environment, for example from
+`2026-07` to `2026-08`, then run the workflow. A cache may occasionally be
+evicted by GitHub; in that case the next deployment downloads it once again.
 
 ### Remote state
 

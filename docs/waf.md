@@ -39,6 +39,11 @@ unknown_country: allow
 rejects every known country not listed. `unknown_country` controls addresses
 that cannot be resolved. An enabled allowlist must not be empty.
 
+`allow_ips` contains explicit IPv4 or IPv6 CIDRs that bypass the country
+decision while remaining protected by Coraza and CRS. For a single address,
+use `/32` for IPv4 or `/128` for IPv6. Residential addresses may change, so
+do not treat this as a permanent identity mechanism.
+
 The build validates the schema, rejects duplicate or malformed country codes,
 and generates a Caddy expression snippet. The default policy is an empty
 blocklist, so GeoIP is active but does not block a real country until the list
@@ -125,10 +130,32 @@ the security need outweighs the data-exposure risk.
 
 ## Database and image updates
 
-GitHub Actions downloads the current GeoLite2 Country release during an
-approved deployment and temporarily stages it under the ignored application
-`.build/` directory. Local builds can copy a dated archive there from the
-ignored `tmp/` directory. Never commit the archive or extracted database.
+GitHub Actions caches the GeoLite2 Country archive using
+`GEOIP_DATABASE_VERSION`. Normal policy builds reuse that version. Changing
+the variable creates a cache miss and downloads the current release, which is
+then cached for later builds. GitHub may evict an old cache, causing one new
+download. The workflow temporarily stages the archive under the ignored
+application `.build/` directory. Local builds can copy a dated archive there
+from the ignored `tmp/` directory. Never commit the archive or extracted
+database.
+
+## Revision rollback
+
+The Container App uses single-revision mode. Azure directs traffic to one
+revision and retains older revisions inactive, avoiding duplicate steady-state
+replica cost. List retained revisions:
+
+```bash
+az containerapp revision list \
+  --resource-group hello-nginx-rg \
+  --name hello-nginx-app \
+  --output table
+```
+
+To roll back, copy the image value from a known healthy revision and set
+`container_image` to that immutable ACR tag, then run the normal saved
+Terraform plan and apply workflow. This keeps Terraform state aligned with the
+revision receiving traffic.
 
 The Dockerfile pins Caddy, Coraza-Caddy, the GeoIP module, and its base CRS
 image. Review upstream releases and verification tests before changing those

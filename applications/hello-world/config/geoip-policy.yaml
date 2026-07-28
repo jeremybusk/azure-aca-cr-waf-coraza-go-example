@@ -3,5 +3,6 @@ enabled: true
 mode: blocklist
 countries:
   - US
-allow_ips: []
+allow_ips:
+    - 204.15.86.209/32
 unknown_country: allow

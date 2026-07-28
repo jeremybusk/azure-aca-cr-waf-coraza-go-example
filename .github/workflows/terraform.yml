@@ -79,6 +79,7 @@ jobs:
           ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER }}
           ACR_PULL_IDENTITY_ID: ${{ vars.ACR_PULL_IDENTITY_ID }}
           CONTAINER_IMAGE_REPOSITORY: ${{ vars.CONTAINER_IMAGE_REPOSITORY }}
+          GEOIP_DATABASE_VERSION: ${{ vars.GEOIP_DATABASE_VERSION }}
         run: |
           missing=0
           for name in \
@@ -91,7 +92,8 @@ jobs:
             ACR_NAME \
             ACR_LOGIN_SERVER \
             ACR_PULL_IDENTITY_ID \
-            CONTAINER_IMAGE_REPOSITORY
+            CONTAINER_IMAGE_REPOSITORY \
+            GEOIP_DATABASE_VERSION
           do
             if [ -z "$(printenv "$name")" ]; then
               echo "::error::$name is not configured as a GitHub Actions variable"
@@ -111,7 +113,15 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           auth-type: SERVICE_PRINCIPAL
 
+      - name: Restore versioned GeoLite2 database
+        id: geolite-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/GeoLite2-Country.tar.gz
+          key: geolite2-country-${{ vars.GEOIP_DATABASE_VERSION }}
+
       - name: Check MaxMind configuration
+        if: steps.geolite-cache.outputs.cache-hit != 'true'
         env:
           MAXMIND_ACCOUNT_ID: ${{ vars.MAXMIND_ACCOUNT_ID }}
           MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
@@ -127,6 +137,7 @@ jobs:
           test "$missing" -eq 0
 
       - name: Download current GeoLite2 Country database
+        if: steps.geolite-cache.outputs.cache-hit != 'true'
         env:
           MAXMIND_ACCOUNT_ID: ${{ vars.MAXMIND_ACCOUNT_ID }}
           MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
@@ -139,6 +150,10 @@ jobs:
             --user "${MAXMIND_ACCOUNT_ID}:${MAXMIND_LICENSE_KEY}" \
             --output "${RUNNER_TEMP}/GeoLite2-Country.tar.gz" \
             "https://download.maxmind.com/geoip/databases/GeoLite2-Country/download?suffix=tar.gz"
+
+      - name: Validate GeoLite2 Country archive
+        run: |
+          test -s "${RUNNER_TEMP}/GeoLite2-Country.tar.gz"
           tar -tzf "${RUNNER_TEMP}/GeoLite2-Country.tar.gz" \
             | grep -q '/GeoLite2-Country.mmdb$'
 
@@ -158,6 +173,10 @@ jobs:
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
             --tag "$IMAGE" \
             applications/hello-world
+          docker run --rm "$IMAGE" \
+            caddy validate \
+            --config /etc/caddy/Caddyfile \
+            --adapter caddyfile
           docker push "$IMAGE"
           echo "TF_VAR_container_image=$IMAGE" >> "$GITHUB_ENV"
           echo "TF_VAR_container_registry_server=${{ vars.ACR_LOGIN_SERVER }}" >> "$GITHUB_ENV"

@@ -26,6 +26,7 @@ class GeoIPPolicyTests(unittest.TestCase):
             "enabled": True,
             "mode": "blocklist",
             "countries": [],
+            "allow_ips": [],
             "unknown_country": "allow",
         }
         value.update(overrides)
@@ -61,6 +62,33 @@ class GeoIPPolicyTests(unittest.TestCase):
     def test_malformed_country_code_is_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "uppercase ISO"):
             self.load(self.base(countries=["usa"]))
+
+    def test_allowed_ip_is_exempt_from_geo_denial(self) -> None:
+        rendered = policy.render(
+            self.load(
+                self.base(
+                    countries=["US"],
+                    allow_ips=["203.0.113.42/32", "2001:db8:1234::/64"],
+                )
+            )
+        )
+        self.assertIn(
+            "not client_ip 2001:db8:1234::/64 203.0.113.42/32",
+            rendered,
+        )
+        self.assertIn("deny_countries US", rendered)
+
+    def test_host_address_without_cidr_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "IPv4 or IPv6 CIDR"):
+            self.load(self.base(allow_ips=["203.0.113.42"]))
+
+    def test_duplicate_allowed_ip_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must not contain duplicates"):
+            self.load(
+                self.base(
+                    allow_ips=["203.0.113.42/32", "203.0.113.42/32"],
+                )
+            )
 
 
 if __name__ == "__main__":

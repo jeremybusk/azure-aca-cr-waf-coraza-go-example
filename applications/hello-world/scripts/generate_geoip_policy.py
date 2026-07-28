@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import pathlib
 import re
 import sys
@@ -19,6 +20,7 @@ EXPECTED_KEYS = {
     "enabled",
     "mode",
     "countries",
+    "allow_ips",
     "unknown_country",
 }
 
@@ -58,7 +60,24 @@ def load_policy(path: pathlib.Path) -> dict:
     if value["enabled"] and mode == "allowlist" and not countries:
         fail("an enabled allowlist must contain at least one country")
 
+    allow_ips = value.get("allow_ips", [])
+    if not isinstance(allow_ips, list):
+        fail("allow_ips must be a YAML list")
+    if not all(
+        isinstance(network, str) and "/" in network for network in allow_ips
+    ):
+        fail("every allow_ips entry must be an IPv4 or IPv6 CIDR string")
+    try:
+        parsed_allow_ips = [
+            str(ipaddress.ip_network(network, strict=True)) for network in allow_ips
+        ]
+    except ValueError as exc:
+        fail(f"every allow_ips entry must be a canonical IPv4 or IPv6 CIDR: {exc}")
+    if len(parsed_allow_ips) != len(set(parsed_allow_ips)):
+        fail("allow_ips must not contain duplicates")
+
     value["countries"] = sorted(countries)
+    value["allow_ips"] = sorted(parsed_allow_ips)
     return value
 
 
@@ -78,9 +97,14 @@ def render(policy: dict) -> str:
             countries.append("UNK")
         directive = f"\t\t\tallow_countries {' '.join(countries)}\n"
 
+    ip_exception = ""
+    if policy["allow_ips"]:
+        ip_exception = f"\tnot client_ip {' '.join(policy['allow_ips'])}\n"
+
     return (
         "# Generated from config/geoip-policy.yaml; do not edit.\n"
         "@geo_denied {\n"
+        f"{ip_exception}"
         "\tnot {\n"
         "\t\tmaxmind_geolocation {\n"
         "\t\t\tdb_path /opt/geoip/GeoLite2-Country.mmdb\n"

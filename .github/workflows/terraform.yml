@@ -113,7 +113,7 @@ jobs:
 
       - name: Check MaxMind configuration
         env:
-          MAXMIND_ACCOUNT_ID: ${{ secrets.MAXMIND_ACCOUNT_ID }}
+          MAXMIND_ACCOUNT_ID: ${{ vars.MAXMIND_ACCOUNT_ID }}
           MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
         run: |
           missing=0

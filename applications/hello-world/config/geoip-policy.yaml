@@ -1,5 +1,6 @@
 version: 1
 enabled: true
 mode: blocklist
-countries: []
+countries:
+  - US
 unknown_country: allow

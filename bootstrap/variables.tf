@@ -23,7 +23,7 @@ variable "resource_group_name" {
 variable "storage_account_name" {
   description = "Globally unique storage account name used for Terraform state."
   type        = string
-  default     = "uvoosttfstateprodwus2001"
+  default     = "examplesttfstateprodwus2001"
 }
 
 variable "container_name" {

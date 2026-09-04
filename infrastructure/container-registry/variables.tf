@@ -23,7 +23,7 @@ variable "resource_group_name" {
 variable "registry_name" {
   description = "Globally unique alphanumeric Azure Container Registry name."
   type        = string
-  default     = "uvooacrprodwus2001"
+  default     = "exampleacrprodwus2001"
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9]{5,50}$", var.registry_name))

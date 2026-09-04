@@ -41,7 +41,7 @@ variable "container_image" {
 }
 
 variable "container_registry_server" {
-  description = "ACR login server, for example uvooacrprodwus2001.azurecr.io."
+  description = "ACR login server, for example exampleacrprodwus2001.azurecr.io."
   type        = string
 
   validation {
@@ -63,7 +63,7 @@ variable "container_registry_identity_id" {
 variable "custom_domain" {
   description = "Apex custom domain to bind to the Container App."
   type        = string
-  default     = "uvoo.xyz"
+  default     = "example.com"
 }
 
 variable "enable_custom_domain" {
@@ -75,17 +75,17 @@ variable "enable_custom_domain" {
 variable "redirect_apex_domain" {
   description = "Apex domain that redirects permanently to the canonical www hostname."
   type        = string
-  default     = "uvoo.xyz"
+  default     = "example.com"
 }
 
 variable "primary_www_domain" {
   description = "Canonical www hostname that serves the application."
   type        = string
-  default     = "www.uvoo.xyz"
+  default     = "www.example.com"
 }
 
 variable "enable_www_custom_domain" {
-  description = "Enable only after the www.uvoo.xyz CNAME and asuid.www TXT records exist in public DNS."
+  description = "Enable only after the www.example.com CNAME and asuid.www TXT records exist in public DNS."
   type        = bool
   default     = true
 }

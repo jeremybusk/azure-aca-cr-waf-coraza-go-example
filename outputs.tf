@@ -30,8 +30,8 @@ output "custom_domain_url" {
   value       = var.enable_custom_domain ? "https://${var.custom_domain}" : null
 }
 
-output "uvoo_xyz_dns_records" {
-  description = "Registrar records for the existing uvoo.xyz apex and new www.uvoo.xyz binding."
+output "example.com_dns_records" {
+  description = "Registrar records for the existing example.com apex and new www.example.com binding."
   sensitive   = true
   value = {
     apex = {
@@ -52,6 +52,6 @@ output "uvoo_xyz_dns_records" {
 }
 
 output "primary_url" {
-  description = "Canonical application URL after both uvoo.xyz certificates are bound."
+  description = "Canonical application URL after both example.com certificates are bound."
   value       = var.enable_www_custom_domain ? "https://${var.primary_www_domain}" : null
 }

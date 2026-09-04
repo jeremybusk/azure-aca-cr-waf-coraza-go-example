@@ -1,12 +1,12 @@
 # Exposing Azure Container Apps with a custom domain
 
-This runbook documents how `uvoo.xyz` is exposed publicly through Azure
+This runbook documents how `example.com` is exposed publicly through Azure
 Container Apps with registrar-hosted DNS and an Azure-managed TLS certificate.
 
 ## Architecture
 
 ```text
-uvoo.xyz
+example.com
   A record -> Container Apps environment public IP
   TXT asuid -> Azure domain verification ID
                     |
@@ -29,7 +29,7 @@ deactivates the corresponding revision.
 
 ## DNS records
 
-For the apex domain `uvoo.xyz`, configure these records at the registrar:
+For the apex domain `example.com`, configure these records at the registrar:
 
 | Type | Host | Value |
 | --- | --- | --- |
@@ -40,8 +40,8 @@ Some registrars use an empty host field instead of `@`. The resulting record
 names must be:
 
 ```text
-uvoo.xyz
-asuid.uvoo.xyz
+example.com
+asuid.example.com
 ```
 
 Terraform intentionally marks the verification value sensitive. Retrieve both
@@ -56,17 +56,17 @@ terraform output -json custom_domain_dns_records
 Query more than one public resolver to avoid relying on a local DNS cache:
 
 ```bash
-dig @8.8.8.8 +short uvoo.xyz A
-dig @8.8.8.8 +short asuid.uvoo.xyz TXT
+dig @8.8.8.8 +short example.com A
+dig @8.8.8.8 +short asuid.example.com TXT
 
-dig @1.1.1.1 +short uvoo.xyz A
-dig @1.1.1.1 +short asuid.uvoo.xyz TXT
+dig @1.1.1.1 +short example.com A
+dig @1.1.1.1 +short asuid.example.com TXT
 ```
 
 The `A` response must equal Terraform's `a_value`. The TXT response must equal
-Terraform's `txt_value`. A registrar normally appends `.uvoo.xyz`
-automatically; entering `asuid.uvoo.xyz` where only `asuid` is expected can
-accidentally create `asuid.uvoo.xyz.uvoo.xyz`.
+Terraform's `txt_value`. A registrar normally appends `.example.com`
+automatically; entering `asuid.example.com` where only `asuid` is expected can
+accidentally create `asuid.example.com.example.com`.
 
 ## Enable the Terraform binding
 
@@ -86,7 +86,7 @@ terraform plan -out=tfplan
 terraform apply tfplan
 ```
 
-The custom-domain resource validates ownership and adds `uvoo.xyz` to the
+The custom-domain resource validates ownership and adds `example.com` to the
 Container App. At this point `az containerapp hostname list` can show the
 hostname with `BindingType: Disabled`: the hostname exists, but HTTPS is not
 yet bound.
@@ -100,7 +100,7 @@ az containerapp hostname bind \
   --resource-group hello-nginx-rg \
   --name hello-nginx-app \
   --environment hello-nginx-env \
-  --hostname uvoo.xyz \
+  --hostname example.com \
   --validation-method HTTP
 ```
 
@@ -124,7 +124,7 @@ The final binding should be:
 ```text
 BindingType    Name
 -------------  --------
-SniEnabled     uvoo.xyz
+SniEnabled     example.com
 ```
 
 An apex domain uses `HTTP` validation; a subdomain using a CNAME uses `CNAME`
@@ -133,12 +133,12 @@ validation.
 Test HTTPS:
 
 ```bash
-curl -I https://uvoo.xyz
+curl -I https://example.com
 ```
 
 ## Keep the `asuid` TXT record
 
-Leave `asuid.uvoo.xyz` in DNS while the custom domain is in use.
+Leave `asuid.example.com` in DNS while the custom domain is in use.
 
 Removing it generally does not immediately disconnect an already validated
 domain or invalidate an already issued certificate. However, Azure can need
@@ -164,7 +164,7 @@ terraform output -raw app_url
 
 ### The hostname is `Disabled`
 
-Verify `uvoo.xyz A` and `asuid.uvoo.xyz TXT` through public resolvers. Wait for
+Verify `example.com A` and `asuid.example.com TXT` through public resolvers. Wait for
 DNS propagation, then run the managed-certificate binding command above. A
 disabled binding is expected after Terraform adds the hostname but before this
 one-time binding step completes.
@@ -179,7 +179,7 @@ az containerapp env certificate list \
 ```
 
 Look for failed or pending provisioning states. Also check whether a CAA
-record on `uvoo.xyz` prevents the managed certificate authority from issuing
+record on `example.com` prevents the managed certificate authority from issuing
 the certificate.
 
 ## References

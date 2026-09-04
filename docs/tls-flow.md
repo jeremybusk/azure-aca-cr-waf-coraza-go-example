@@ -4,7 +4,7 @@ The request path is:
 
 ```text
 Browser
-  → DNS: uvoo.xyz resolves to Container Apps environment IP
+  → DNS: example.com resolves to Container Apps environment IP
   → Azure Container Apps ingress terminates TLS
   → Azure routes the request to hello-nginx-app
   → Caddy receives traffic on container port 8080
@@ -13,12 +13,12 @@ Browser
 
 Certificate lifecycle:
 
-1. The `A` record routes `uvoo.xyz` to the Container Apps environment.
+1. The `A` record routes `example.com` to the Container Apps environment.
 2. The `asuid` TXT record proves domain ownership.
 3. Azure validates the domain.
 4. `az containerapp hostname bind` requests a free managed certificate.
 5. Azure stores the certificate as a managed certificate within `hello-nginx-env`.
-6. The certificate is bound to `uvoo.xyz` using SNI.
+6. The certificate is bound to `example.com` using SNI.
 7. Azure manages the private key and certificate renewal.
 
 The certificate resource resides conceptually at:
@@ -54,7 +54,7 @@ You want:
 ```text
 BindingType    Name
 -------------  --------
-SniEnabled     uvoo.xyz
+SniEnabled     example.com
 ```
 
 If it still says `Disabled`, request and bind the certificate:
@@ -64,7 +64,7 @@ az containerapp hostname bind \
   --resource-group hello-nginx-rg \
   --name hello-nginx-app \
   --environment hello-nginx-env \
-  --hostname uvoo.xyz \
+  --hostname example.com \
   --validation-method HTTP
 ```
 

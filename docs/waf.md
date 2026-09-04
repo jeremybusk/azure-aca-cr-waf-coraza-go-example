@@ -3,7 +3,7 @@
 The Container App runs an immutable private image:
 
 ```text
-uvooacrprodwus2001.azurecr.io/hello-world:<git-sha>
+exampleacrprodwus2001.azurecr.io/hello-world:<git-sha>
 ```
 
 Azure Container Apps terminates public TLS and forwards HTTP to port 8080 in
@@ -65,12 +65,12 @@ for troubleshooting.
 After applying Terraform:
 
 ```bash
-curl -i https://www.uvoo.xyz/
-curl -i https://uvoo.xyz/
+curl -i https://www.example.com/
+curl -i https://example.com/
 ```
 
 The first request should return the Hello World page. The second should return
-a permanent redirect to `https://www.uvoo.xyz/`.
+a permanent redirect to `https://www.example.com/`.
 
 ## Verify that CRS blocks an attack-shaped test request
 
@@ -79,7 +79,7 @@ Only run this against an application you own:
 ```bash
 curl -i --get \
   --data-urlencode "search=<script>alert(1)</script>" \
-  https://www.uvoo.xyz/
+  https://www.example.com/
 ```
 
 CRS should reject the request, normally with HTTP `403`. A normal request
@@ -88,7 +88,7 @@ should continue to return HTTP `200`:
 ```bash
 curl -i --get \
   --data-urlencode "search=hello" \
-  https://www.uvoo.xyz/
+  https://www.example.com/
 ```
 
 Container console logs are available without adding a Log Analytics

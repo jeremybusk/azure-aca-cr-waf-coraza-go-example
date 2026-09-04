@@ -2,7 +2,7 @@
 terraform {
   backend "azurerm" {
     resource_group_name  = "rg-tfstate-prod-westus2-001"
-    storage_account_name = "uvoosttfstateprodwus2001"
+    storage_account_name = "examplesttfstateprodwus2001"
     container_name       = "tfstate"
     key                  = "bootstrap/prod/terraform.tfstate"
     use_azuread_auth     = true

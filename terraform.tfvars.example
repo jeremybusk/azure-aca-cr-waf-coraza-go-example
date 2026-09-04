@@ -2,6 +2,6 @@
 # location        = "westus2"
 # name_prefix     = "hello-nginx"
 
-container_image                = "uvooacrprodwus2001.azurecr.io/hello-world:replace-with-git-sha"
-container_registry_server      = "uvooacrprodwus2001.azurecr.io"
+container_image                = "exampleacrprodwus2001.azurecr.io/hello-world:replace-with-git-sha"
+container_registry_server      = "exampleacrprodwus2001.azurecr.io"
 container_registry_identity_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-acr-prod-westus2-001/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-acr-pull-prod-westus2-001"

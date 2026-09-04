@@ -117,7 +117,7 @@ Container App hostname conflicts, choose a more distinctive `name_prefix`.
 
 ## Custom domain
 
-The apex domain defaults to `uvoo.xyz` and is deliberately enabled in two
+The apex domain defaults to `example.com` and is deliberately enabled in two
 phases so the deployment does not fail before public DNS is ready.
 
 First leave `enable_custom_domain = false`, apply, and read:
@@ -138,7 +138,7 @@ After public DNS resolves, set the variable default to `true` or deploy with:
 terraform apply -var='enable_custom_domain=true'
 ```
 
-Azure Container Apps then validates `uvoo.xyz`, binds it to the app, and
+Azure Container Apps then validates `example.com`, binds it to the app, and
 adds the custom hostname. Run the one-time managed-certificate binding command
 in the custom-domain runbook to issue and bind HTTPS. GitHub Actions uses
 variable defaults, so a permanent CI deployment should change the default in
@@ -147,8 +147,8 @@ variable defaults, so a permanent CI deployment should change the default in
 See [docs/custom-domain.md](docs/custom-domain.md) for the complete DNS,
 verification, certificate-binding, and troubleshooting runbook.
 
-See [docs/uvoo-xyz-redirect.md](docs/uvoo-xyz-redirect.md) for the separate
-`uvoo.xyz` to `www.uvoo.xyz` DNS, certificate, and redirect procedure.
+See [docs/example.com-redirect.md](docs/example.com-redirect.md) for the separate
+`example.com` to `www.example.com` DNS, certificate, and redirect procedure.
 
 ## Web application firewall
 

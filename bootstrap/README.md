@@ -39,7 +39,7 @@ then run the plan and apply commands above.
 This creates:
 
 - resource group `rg-tfstate-prod-westus2-001`;
-- storage account `uvoosttfstateprodwus2001` using Standard LRS;
+- storage account `examplesttfstateprodwus2001` using Standard LRS;
 - private container `tfstate`;
 - blob versioning and seven-day soft deletion;
 - an Entra application, service principal, and GitHub OIDC federated

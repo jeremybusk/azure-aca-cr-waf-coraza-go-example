@@ -19,8 +19,8 @@
 		include /templates/coraza-rules.conf
 	}
 
-	@apex host uvoo.xyz
-	redir @apex https://www.uvoo.xyz{uri} permanent
+	@apex host example.com
+	redir @apex https://www.example.com{uri} permanent
 
 	header {
 		-Server

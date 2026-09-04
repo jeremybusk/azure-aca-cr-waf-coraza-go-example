@@ -1,20 +1,20 @@
-# Redirect `uvoo.xyz` to `www.uvoo.xyz`
+# Redirect `example.com` to `www.example.com`
 
 This configuration serves the application at:
 
 ```text
-https://www.uvoo.xyz
+https://www.example.com
 ```
 
 and returns an HTTP `301` redirect from:
 
 ```text
-https://uvoo.xyz
+https://example.com
 ```
 
 Both hostnames must be added to Azure Container Apps and both need managed TLS
 certificates. The existing configuration already manages and secures
-`uvoo.xyz`; this procedure adds `www.uvoo.xyz`. The redirect happens in Caddy
+`example.com`; this procedure adds `www.example.com`. The redirect happens in Caddy
 after Container Apps terminates TLS for the apex hostname.
 
 ## Phase 1: configure DNS
@@ -22,7 +22,7 @@ after Container Apps terminates TLS for the apex hostname.
 Leave `enable_www_custom_domain = false`, apply Terraform, and retrieve:
 
 ```bash
-terraform output -json uvoo_xyz_dns_records
+terraform output -json example.com_dns_records
 ```
 
 Configure the reported records at the registrar:
@@ -40,10 +40,10 @@ permit a CNAME to coexist with other records at the same name.
 Verify the records through public resolvers:
 
 ```bash
-dig @8.8.8.8 +short uvoo.xyz A
-dig @8.8.8.8 +short asuid.uvoo.xyz TXT
-dig @8.8.8.8 +short www.uvoo.xyz CNAME
-dig @8.8.8.8 +short asuid.www.uvoo.xyz TXT
+dig @8.8.8.8 +short example.com A
+dig @8.8.8.8 +short asuid.example.com TXT
+dig @8.8.8.8 +short www.example.com CNAME
+dig @8.8.8.8 +short asuid.www.example.com TXT
 ```
 
 ## Phase 2: create the www hostname
@@ -57,7 +57,7 @@ variable "enable_www_custom_domain" {
 }
 ```
 
-Plan and apply. Terraform creates the additional `www.uvoo.xyz` hostname
+Plan and apply. Terraform creates the additional `www.example.com` hostname
 record and deploys the Caddy redirect configuration.
 
 ## Phase 3: bind the www managed certificate
@@ -69,7 +69,7 @@ az containerapp hostname bind \
   --resource-group hello-nginx-rg \
   --name hello-nginx-app \
   --environment hello-nginx-env \
-  --hostname www.uvoo.xyz \
+  --hostname www.example.com \
   --validation-method CNAME
 ```
 
@@ -87,15 +87,15 @@ Both should show `SniEnabled`.
 ## Test
 
 ```bash
-curl -I https://uvoo.xyz
-curl -I https://www.uvoo.xyz
+curl -I https://example.com
+curl -I https://www.example.com
 ```
 
 The apex response should include:
 
 ```text
 HTTP/2 301
-location: https://www.uvoo.xyz/
+location: https://www.example.com/
 ```
 
 The `www` response should return `HTTP/2 200`.
